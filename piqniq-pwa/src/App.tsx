@@ -12,6 +12,8 @@ interface Notification {
   message: string;
   timestamp: string;
   userId: string;
+  location?: string;
+  coordinates?: { lat: number; lon: number } | null;
 }
 
 const App: React.FC = () => {
@@ -66,9 +68,62 @@ const App: React.FC = () => {
     }
   }, [currentUserId]);
 
-  const handleButtonClick = () => {
+  const getLocation = async (): Promise<{ address: string; coordinates: { lat: number; lon: number } | null }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await response.json();
+            const address = data.display_name || `${latitude}, ${longitude}`;
+            resolve({
+              address,
+              coordinates: { lat: latitude, lon: longitude }
+            });
+          } catch (error) {
+            console.error('Error getting address:', error);
+            resolve({
+              address: 'Location unknown',
+              coordinates: null
+            });
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          resolve({
+            address: 'Location unavailable',
+            coordinates: null
+          });
+        }
+      );
+    });
+  };
+
+  const handleButtonClick = async () => {
     if (socket) {
-      socket.emit('button_click', { timestamp: new Date().toISOString() });
+      try {
+        const { address, coordinates } = await getLocation();
+        socket.emit('button_click', { 
+          timestamp: new Date().toISOString(),
+          location: address,
+          coordinates
+        });
+      } catch (error) {
+        console.error('Error getting location:', error);
+        socket.emit('button_click', { 
+          timestamp: new Date().toISOString(),
+          location: 'Location unavailable',
+          coordinates: null
+        });
+      }
     }
   };
 
@@ -113,6 +168,7 @@ const App: React.FC = () => {
                   <NotificationPopup
                     message={activePopup.message}
                     onClose={handleClosePopup}
+                    coordinates={activePopup.coordinates}
                   />
                 )}
               </div>

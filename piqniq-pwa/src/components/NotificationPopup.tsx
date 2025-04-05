@@ -4,9 +4,10 @@ import './NotificationPopup.css';
 interface NotificationPopupProps {
   message: string;
   onClose: () => void;
+  coordinates?: { lat: number; lon: number } | null;
 }
 
-const NotificationPopup: React.FC<NotificationPopupProps> = ({ message, onClose }) => {
+const NotificationPopup: React.FC<NotificationPopupProps> = ({ message, onClose, coordinates }) => {
   useEffect(() => {
     // Auto-close after 10 seconds
     const timer = setTimeout(() => {
@@ -16,11 +17,34 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ message, onClose 
     return () => clearTimeout(timer);
   }, [onClose]);
 
+  const getLocationLink = () => {
+    if (!coordinates) return null;
+    const { lat, lon } = coordinates;
+    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}&zoom=15`;
+  };
+
+  const locationLink = getLocationLink();
+  const [emergencyMessage, locationMessage] = message.split('\n');
+
   return (
     <div className="notification-popup">
       <div className="notification-content">
         <h3>Emergency Alert!</h3>
-        <p>{message}</p>
+        <p className="emergency-message">{emergencyMessage}</p>
+        <p className="location-message">{locationMessage}</p>
+        {locationLink && (
+          <div className="location-icon-container">
+            <a 
+              href={locationLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="location-link"
+              title="View location on map"
+            >
+              <span className="material-icons">location_on</span>
+            </a>
+          </div>
+        )}
         <button className="close-button" onClick={onClose}>Close</button>
       </div>
     </div>

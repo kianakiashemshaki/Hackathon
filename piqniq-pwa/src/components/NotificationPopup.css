@@ -29,10 +29,49 @@
   font-size: 1.5rem;
 }
 
-.notification-content p {
-  margin: 0 0 1.5rem 0;
+.emergency-message {
+  margin: 0 0 0.5rem 0;
   font-size: 1.2rem;
   line-height: 1.4;
+  font-weight: bold;
+}
+
+.location-message {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  color: #ffcccc;
+  text-align: center;
+}
+
+.location-icon-container {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 1.5rem 0;
+}
+
+.interpunct {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.location-link {
+  display: inline-flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
+  transition: transform 0.3s;
+  padding: 0.5rem;
+}
+
+.location-link .material-icons {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.location-link:hover {
+  transform: scale(1.2);
 }
 
 .close-button {
