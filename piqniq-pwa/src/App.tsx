@@ -20,6 +20,9 @@ interface Notification {
   };
 }
 
+// Get the current hostname and port
+const API_URL = `http://${window.location.hostname}:3001`;
+
 const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -47,15 +50,33 @@ const App: React.FC = () => {
         console.error('Error decoding token:', error);
       }
 
-      // Initialize WebSocket connection
-      const socket = io('http://localhost:3001', {
+      // Initialize WebSocket connection with proper configuration
+      const socket = io(API_URL, {
         auth: {
           token: token
-        }
+        },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
+        path: '/socket.io/'
       });
 
-      // Authenticate the socket connection
-      socket.emit('authenticate', token);
+      // Handle connection events
+      socket.on('connect', () => {
+        console.log('WebSocket connected');
+        socket.emit('authenticate', token);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('WebSocket connection error:', error);
+      });
+
+      socket.on('disconnect', (reason) => {
+        console.log('WebSocket disconnected:', reason);
+      });
 
       socket.on('notification', (data) => {
         console.log('Received notification:', data);

@@ -7,15 +7,34 @@ const db = require('./db');
 
 const app = express();
 const server = http.createServer(app);
+
+// Enable CORS for all routes with minimal restrictions
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["*"],
+  credentials: true
+}));
+
+// Configure Socket.IO with minimal CORS restrictions
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["*"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000,
+  path: '/socket.io/',
+  serveClient: false,
+  cookie: false
 });
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // JWT Secret (in production, use environment variable)
@@ -72,71 +91,82 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/signin', async (req, res) => {
   const { name } = req.body;
 
+  if (!name) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+
   try {
-    db.get('SELECT * FROM users WHERE name = ?', [name], (err, row) => {
+    console.log('Attempting to sign in user:', name);
+    
+    // Find user by name
+    db.get('SELECT * FROM users WHERE name = ?', [name], (err, user) => {
       if (err) {
+        console.error('Database error during sign in:', err);
         return res.status(500).json({ error: 'Database error' });
       }
-      if (!row) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+
+      if (!user) {
+        console.log('User not found:', name);
+        return res.status(401).json({ error: 'User not found' });
       }
 
-      const token = jwt.sign({ userId: row.id, name: row.name }, JWT_SECRET);
-      res.json({ token, userId: row.id });
+      console.log('User found, generating token for:', name);
+      const token = jwt.sign({ userId: user.id, name: user.name }, JWT_SECRET);
+      res.json({ token, userId: user.id });
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Sign in error:', error);
+    res.status(500).json({ error: 'Server error during sign in' });
   }
 });
 
-// Emergency contacts routes
+// Add emergency contact
 app.post('/api/contacts', authenticateToken, async (req, res) => {
-  const { contactName } = req.body;
+  const { name, email } = req.body;
   const userId = req.user.userId;
 
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Name and email are required' });
+  }
+
   try {
-    // First, find the contact by name
-    db.get('SELECT id FROM users WHERE name = ?', [contactName], (err, contact) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (!contact) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      // Prevent users from adding themselves as contacts
-      if (contact.id === userId) {
-        return res.status(400).json({ error: 'Cannot add yourself as an emergency contact' });
-      }
-
-      // Check if the contact is already added
+    console.log('Attempting to add contact:', { name, email, userId });
+    
+    // Check if contact already exists
+    const existingContact = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM emergency_contacts WHERE user_id = ? AND contact_id = ?',
-        [userId, contact.id],
-        (err, existingContact) => {
-          if (err) {
-            return res.status(500).json({ error: 'Database error' });
-          }
-          if (existingContact) {
-            return res.status(400).json({ error: 'Contact already added' });
-          }
-
-          // Add the contact
-          db.run(
-            'INSERT INTO emergency_contacts (user_id, contact_id) VALUES (?, ?)',
-            [userId, contact.id],
-            (err) => {
-              if (err) {
-                return res.status(500).json({ error: 'Database error' });
-              }
-              res.json({ message: 'Contact added successfully' });
-            }
-          );
+        'SELECT * FROM emergency_contacts WHERE user_id = ? AND email = ?',
+        [userId, email],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
         }
       );
     });
+
+    if (existingContact) {
+      return res.status(400).json({ error: 'Contact already exists' });
+    }
+
+    // Add new contact
+    await new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO emergency_contacts (user_id, name, email) VALUES (?, ?, ?)',
+        [userId, name, email],
+        (err) => {
+          if (err) {
+            console.error('Database error adding contact:', err);
+            reject(err);
+          } else resolve(null);
+        }
+      );
+    });
+
+    console.log('Contact added successfully');
+    res.status(201).json({ message: 'Contact added successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error adding contact:', error);
+    res.status(500).json({ error: 'Error adding contact. Please try again.' });
   }
 });
 
@@ -180,6 +210,16 @@ io.on('connection', (socket) => {
       console.error('WebSocket authentication failed:', err);
       socket.disconnect();
     }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', (reason) => {
+    console.log('User disconnected:', reason);
+  });
+
+  // Handle errors
+  socket.on('error', (error) => {
+    console.error('WebSocket error:', error);
   });
 
   // Handle panic button click
@@ -236,14 +276,11 @@ io.on('connection', (socket) => {
       });
     });
   });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
 });
 
 // Start server
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const HOST = '0.0.0.0';
+server.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
 }); 

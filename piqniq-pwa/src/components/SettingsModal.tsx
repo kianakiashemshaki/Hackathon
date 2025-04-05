@@ -1,23 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import './SettingsModal.css';
 
-interface Contact {
-  id: number;
-  name: string;
-  email: string;
-}
+const API_URL = `http://${window.location.hostname}:3001`;
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface Contact {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const EMERGENCY_CONTACT = {
+  email: 'letmemakenewone@gmail.com',
+  phone: '+1 (619) 609 3341'
+};
+
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [contactName, setContactName] = useState('');
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -28,49 +35,56 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const fetchContacts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/contacts', {
+      const response = await fetch(`${API_URL}/api/contacts`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
+      
       if (response.ok) {
         const data = await response.json();
         setContacts(data);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to fetch contacts');
       }
     } catch (err) {
       console.error('Error fetching contacts:', err);
-    } finally {
-      setIsLoading(false);
+      setError('Error fetching contacts. Please try again.');
     }
   };
 
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
     setSuccess('');
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/contacts', {
+      const response = await fetch(`${API_URL}/api/contacts`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ contactName }),
+        body: JSON.stringify({ name: contactName, email: '' })
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         setSuccess('Contact added successfully');
         setContactName('');
-        fetchContacts(); // Refresh the contacts list
+        fetchContacts();
       } else {
-        const data = await response.json();
         setError(data.error || 'Failed to add contact');
       }
     } catch (err) {
-      setError('An error occurred while adding the contact');
+      console.error('Error adding contact:', err);
+      setError('Error adding contact. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,6 +96,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         <button className="close-button" onClick={onClose}>×</button>
         <h2>Emergency Contacts</h2>
         
+        <div className="emergency-contact-info">
+          <h3>Emergency Contact</h3>
+          <p>Email: {EMERGENCY_CONTACT.email}</p>
+          <p>Phone: {EMERGENCY_CONTACT.phone}</p>
+        </div>
+
         <form onSubmit={handleAddContact}>
           <div className="form-group">
             <label htmlFor="contactName">Add New Contact</label>
@@ -92,25 +112,26 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               onChange={(e) => setContactName(e.target.value)}
               placeholder="Enter contact's name"
               required
+              disabled={isLoading}
             />
           </div>
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-          <button type="submit" className="add-button">Add Contact</button>
+          <button type="submit" className="add-button" disabled={isLoading}>
+            {isLoading ? 'Adding...' : 'Add Contact'}
+          </button>
         </form>
+
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
 
         <div className="contacts-list">
           <h3>Your Emergency Contacts</h3>
-          {isLoading ? (
-            <div className="loading">Loading contacts...</div>
-          ) : contacts.length === 0 ? (
-            <div className="no-contacts">No emergency contacts added yet</div>
+          {contacts.length === 0 ? (
+            <p>No emergency contacts added yet</p>
           ) : (
             <ul>
               {contacts.map(contact => (
                 <li key={contact.id} className="contact-item">
                   <span className="contact-name">{contact.name}</span>
-                  <span className="contact-email">{contact.email}</span>
                 </li>
               ))}
             </ul>
