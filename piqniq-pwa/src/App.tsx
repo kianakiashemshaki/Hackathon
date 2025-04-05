@@ -14,6 +14,10 @@ interface Notification {
   userId: string;
   location?: string;
   coordinates?: { lat: number; lon: number } | null;
+  emergencyContact?: {
+    email: string;
+    phone: string;
+  };
 }
 
 const App: React.FC = () => {
@@ -24,6 +28,7 @@ const App: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [activePopup, setActivePopup] = useState<Notification | null>(null);
+  const [showEmergencyCall, setShowEmergencyCall] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -53,10 +58,12 @@ const App: React.FC = () => {
       socket.emit('authenticate', token);
 
       socket.on('notification', (data) => {
+        console.log('Received notification:', data);
         // Only show notifications meant for the current user
         if (data.userId !== currentUserId) {
           setNotifications(prev => [...prev, data]);
           setActivePopup(data);
+          console.log('Setting active popup:', data);
         }
       });
 
@@ -116,6 +123,7 @@ const App: React.FC = () => {
           location: address,
           coordinates
         });
+        setShowEmergencyCall(true);
       } catch (error) {
         console.error('Error getting location:', error);
         socket.emit('button_click', { 
@@ -123,8 +131,17 @@ const App: React.FC = () => {
           location: 'Location unavailable',
           coordinates: null
         });
+        setShowEmergencyCall(true);
       }
     }
+  };
+
+  const handleEmergencyCall = () => {
+    const meetUrl = `https://meet.google.com/new?authuser=letmemakenewone@gmail.com`;
+    window.open(meetUrl, '_blank');
+    
+    const phoneUrl = 'tel:+1 (619) 609 3341';
+    window.open(phoneUrl, '_blank');
   };
 
   const handleClosePopup = () => {
@@ -154,12 +171,22 @@ const App: React.FC = () => {
                 >
                   ⚙️
                 </button>
-                <button 
-                  className="action-button"
-                  onClick={handleButtonClick}
-                >
-                  Panic Attack
-                </button>
+                <div className="button-container">
+                  <button 
+                    className="action-button"
+                    onClick={handleButtonClick}
+                  >
+                    Panic Attack
+                  </button>
+                  {showEmergencyCall && (
+                    <button 
+                      className="main-menu-call-button"
+                      onClick={handleEmergencyCall}
+                    >
+                      <span className="material-icons">call</span>
+                    </button>
+                  )}
+                </div>
                 <SettingsModal 
                   isOpen={isSettingsOpen}
                   onClose={() => setIsSettingsOpen(false)}
@@ -169,6 +196,7 @@ const App: React.FC = () => {
                     message={activePopup.message}
                     onClose={handleClosePopup}
                     coordinates={activePopup.coordinates}
+                    emergencyContact={activePopup.emergencyContact}
                   />
                 )}
               </div>

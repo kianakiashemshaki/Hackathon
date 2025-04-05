@@ -1,13 +1,23 @@
 import React, { useEffect } from 'react';
 import './NotificationPopup.css';
+import EmergencyCallButton from './EmergencyCallButton';
 
 interface NotificationPopupProps {
   message: string;
   onClose: () => void;
   coordinates?: { lat: number; lon: number } | null;
+  emergencyContact?: {
+    email: string;
+    phone: string;
+  };
 }
 
-const NotificationPopup: React.FC<NotificationPopupProps> = ({ message, onClose, coordinates }) => {
+const NotificationPopup: React.FC<NotificationPopupProps> = ({ 
+  message, 
+  onClose, 
+  coordinates,
+  emergencyContact 
+}) => {
   useEffect(() => {
     // Auto-close after 10 seconds
     const timer = setTimeout(() => {
@@ -43,6 +53,14 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ message, onClose,
             >
               <span className="material-icons">location_on</span>
             </a>
+          </div>
+        )}
+        {emergencyContact && (
+          <div className="emergency-call-container">
+            <EmergencyCallButton 
+              phone={emergencyContact.phone}
+              email={emergencyContact.email}
+            />
           </div>
         )}
         <button className="close-button" onClick={onClose}>Close</button>

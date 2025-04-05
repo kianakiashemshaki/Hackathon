@@ -74,6 +74,54 @@
   transform: scale(1.2);
 }
 
+.emergency-call-container {
+  margin: 1rem 0;
+}
+
+.emergency-call-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+
+.emergency-call-button:hover:not(:disabled) {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.emergency-call-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.emergency-call-button.calling {
+  animation: pulse 1.5s infinite;
+}
+
+.emergency-call-button .material-icons {
+  font-size: 1.4rem;
+}
+
+.call-status {
+  margin-top: 0.5rem;
+  color: #ffcccc;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 .close-button {
   background-color: white;
   color: #ff4444;
@@ -83,6 +131,7 @@
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.3s;
+  margin-top: 1rem;
 }
 
 .close-button:hover {
@@ -97,4 +146,16 @@
 @keyframes slideIn {
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 } 
