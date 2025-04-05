@@ -186,6 +186,8 @@ io.on('connection', (socket) => {
 
     const userId = socket.user.userId;
     const userName = socket.user.name;
+    const location = data.location || 'Location unavailable';
+    const coordinates = data.coordinates || null;
 
     // Record the panic attack
     db.run('INSERT INTO panic_attacks (user_id) VALUES (?)', [userId], (err) => {
@@ -215,9 +217,11 @@ io.on('connection', (socket) => {
           if (contactSocket) {
             contactSocket.emit('notification', {
               type: 'panic_attack',
-              message: `${userName} is experiencing a panic attack!`,
+              message: `${userName} is under attack!\nGo to the rescue at ${location}`,
               timestamp: new Date().toISOString(),
-              userId: userId
+              userId: userId,
+              location: location,
+              coordinates: coordinates
             });
           }
         });
