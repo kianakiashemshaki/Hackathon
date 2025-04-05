@@ -161,6 +161,11 @@ app.get('/api/contacts', authenticateToken, async (req, res) => {
   }
 });
 
+const EMERGENCY_CONTACT = {
+  email: 'letmemakenewone@gmail.com',
+  phone: '+1 (619) 609 3341'
+};
+
 // WebSocket connection handling
 io.on('connection', (socket) => {
   console.log('A user connected');
@@ -215,14 +220,17 @@ io.on('connection', (socket) => {
             .find(s => s.user && s.user.userId === contact.id);
 
           if (contactSocket) {
-            contactSocket.emit('notification', {
+            const notificationData = {
               type: 'panic_attack',
               message: `${userName} is under attack!\nGo to the rescue at ${location}`,
               timestamp: new Date().toISOString(),
               userId: userId,
               location: location,
-              coordinates: coordinates
-            });
+              coordinates: coordinates,
+              emergencyContact: EMERGENCY_CONTACT
+            };
+            console.log('Sending notification:', notificationData);
+            contactSocket.emit('notification', notificationData);
           }
         });
       });
