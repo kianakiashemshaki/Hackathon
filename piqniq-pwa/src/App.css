@@ -75,7 +75,6 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  transform: none;
   background: none;
   border: none;
   font-size: 24px;
@@ -87,8 +86,27 @@
   z-index: 11;
 }
 
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  padding: 10px;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-button:hover,
 .settings-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .button-container {
@@ -221,23 +239,22 @@
     font-size: 3.5rem;
   }
 
-  .settings-button {
+  .settings-button,
+  .back-button {
     top: 15px;
-    right: 15px;
     font-size: 20px;
+  }
+  
+  .settings-button {
+    right: 15px;
+  }
+  
+  .back-button {
+    left: 15px;
   }
 
   .baby-bot-image {
     width: 150px;
-  }
-
-  .back-button {
-    left: 10px;
-  }
-
-  .back-button .material-icons,
-  .settings-button {
-    font-size: 20px;
   }
 }
 
@@ -291,31 +308,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.back-button {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: white;
-  padding: 8px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  z-index: 11;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-}
-
-.back-button:hover,
-.settings-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .back-button .material-icons {

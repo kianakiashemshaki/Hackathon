@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './SettingsModal.css';
+import { useNavigate } from 'react-router-dom';
 
 const API_URL = `http://${window.location.hostname}:3001`;
 
@@ -25,6 +26,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen) {
@@ -86,6 +88,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
   };
 
   if (!isOpen) return null;
