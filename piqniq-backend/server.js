@@ -291,6 +291,19 @@ io.on('connection', (socket) => {
                 coordinates: coordinates,
                 emergencyContact: EMERGENCY_CONTACT
               };
+              
+              // Enhanced location logging
+              console.log('\n=== PANIC ALERT LOCATION INFO ===');
+              console.log(`User: ${userName}`);
+              console.log(`Location: ${location}`);
+              if (coordinates) {
+                console.log(`Coordinates: ${coordinates.lat}, ${coordinates.lon}`);
+                console.log(`Maps Link: https://www.openstreetmap.org/?mlat=${coordinates.lat}&mlon=${coordinates.lon}&zoom=15`);
+              } else {
+                console.log('Coordinates: Not available');
+              }
+              console.log('================================\n');
+              
               console.log('Sending notification:', notificationData);
               contactSocket.emit('notification', notificationData);
             }

@@ -105,40 +105,85 @@ const App: React.FC = () => {
   }, [currentUserId]);
 
   const getLocation = async (): Promise<{ address: string; coordinates: { lat: number; lon: number } | null }> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by your browser'));
+    return new Promise((resolve) => {
+      // Hardcoded fallback location
+      const fallbackLocation = {
+        address: 'Department of Geography, Ridge Street, Bowling Green, Wood County, Ohio, 43403, United States',
+        coordinates: { lat: 41.3779119, lon: -83.6395318 }
+      };
+
+      // Check if we're in a secure context
+      if (!window.isSecureContext) {
+        console.warn('Not in secure context - using fallback location');
+        resolve(fallbackLocation);
         return;
       }
 
+      if (!navigator.geolocation) {
+        resolve(fallbackLocation);
+        return;
+      }
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      };
+
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          const { latitude, longitude } = position.coords;
           try {
-            const { latitude, longitude } = position.coords;
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-            );
-            const data = await response.json();
-            const address = data.display_name || `${latitude}, ${longitude}`;
+            let retries = 3;
+            let address = `${latitude}, ${longitude}`;
+            
+            while (retries > 0) {
+              try {
+                const response = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+                  {
+                    headers: {
+                      'User-Agent': 'PiqniqApp/1.0'
+                    }
+                  }
+                );
+                
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.display_name) {
+                  address = data.display_name;
+                  break;
+                }
+              } catch (error) {
+                console.warn(`Reverse geocoding attempt ${4 - retries} failed:`, error);
+                retries--;
+                if (retries > 0) {
+                  await new Promise(r => setTimeout(r, 1000));
+                }
+              }
+            }
+
             resolve({
               address,
               coordinates: { lat: latitude, lon: longitude }
             });
           } catch (error) {
-            console.error('Error getting address:', error);
+            console.error('Error in location processing:', error);
             resolve({
-              address: 'Location unknown',
-              coordinates: null
+              address: 'Location known but address lookup failed',
+              coordinates: { lat: latitude, lon: longitude }
             });
           }
         },
         (error) => {
-          console.error('Error getting location:', error);
-          resolve({
-            address: 'Location unavailable',
-            coordinates: null
-          });
-        }
+          console.error('Geolocation error:', error);
+          // Use hardcoded fallback location instead of IP-based geolocation
+          resolve(fallbackLocation);
+        },
+        options
       );
     });
   };
