@@ -61,6 +61,20 @@ function createTables() {
         });
       }
     });
+
+    // Verify the schema after creation
+    verifySchema();
+  });
+}
+
+// Add this function to verify the schema
+function verifySchema() {
+  db.all("PRAGMA table_info(panic_attacks)", (err, rows) => {
+    if (err) {
+      console.error('Error checking schema:', err);
+      return;
+    }
+    console.log('Panic attacks table schema:', rows);
   });
 }
 

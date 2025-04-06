@@ -10,9 +10,9 @@ const server = http.createServer(app);
 
 // Enable CORS for all routes with minimal restrictions
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["*"],
+  origin: 'http://localhost:3000', // Your frontend URL
+  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
@@ -51,8 +51,11 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
+      console.error('Token verification error:', err);
       return res.sendStatus(403);
     }
+    
+    console.log('Authenticated user:', user); // Debug log
     req.user = user;
     next();
   });
@@ -339,17 +342,48 @@ app.patch('/api/panic-attacks/:id', authenticateToken, (req, res) => {
   const { cause } = req.body;
   const userId = req.user.userId;
 
+  console.log('Received PATCH request:', {
+    id,
+    cause,
+    userId,
+    headers: req.headers,
+    body: req.body
+  });
+
   db.run(
     'UPDATE panic_attacks SET cause = ? WHERE id = ? AND user_id = ?',
     [cause, id, userId],
-    (err) => {
+    function(err) {
       if (err) {
         console.error('Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
+
+      if (this.changes === 0) {
+        console.log('No rows updated');
+        return res.status(404).json({ error: 'Panic attack not found or unauthorized' });
+      }
+
+      console.log('Successfully updated panic attack');
       res.json({ message: 'Cause updated successfully' });
     }
   );
+});
+
+// Debug route to check table structure (you can remove this later)
+app.get('/api/debug/panic-attacks-schema', authenticateToken, (req, res) => {
+  db.all("PRAGMA table_info(panic_attacks)", (err, rows) => {
+    if (err) {
+      console.error('Error checking schema:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
+});
+
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is running' });
 });
 
 // Start server
