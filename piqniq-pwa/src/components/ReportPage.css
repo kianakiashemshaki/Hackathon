@@ -147,8 +147,42 @@
 
 .report-table th:last-child,
 .report-table td:last-child {
-  width: 80px;
+  width: 120px;
   text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff4444;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #ffe5e5;
+  transform: scale(1.1);
+}
+
+.delete-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.delete-button .material-icons {
+  font-size: 20px;
 }
 
 /* Add responsive styles */
@@ -171,16 +205,22 @@
     font-size: 14px;
   }
 
-  .save-button {
+  .save-button,
+  .delete-button {
     padding: 6px;
   }
 
-  .save-button .material-icons {
+  .save-button .material-icons,
+  .delete-button .material-icons {
     font-size: 18px;
   }
 
   .report-table th:last-child,
   .report-table td:last-child {
-    width: 60px;
+    width: 90px;
+  }
+
+  .action-buttons {
+    gap: 4px;
   }
 } 

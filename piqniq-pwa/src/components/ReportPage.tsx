@@ -17,6 +17,7 @@ const ReportPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -136,6 +137,71 @@ const ReportPage: React.FC = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this record?')) {
+      return;
+    }
+
+    try {
+      setDeleting(id);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Not authenticated');
+        return;
+      }
+
+      const url = `${API_URL}/api/panic-attacks/${id}`;
+      console.log('Sending delete request to:', url); // Debug log
+
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log('Delete response status:', response.status); // Debug log
+
+      const data = await response.json();
+      console.log('Delete response data:', data); // Debug log
+
+      if (response.ok) {
+        // Remove the deleted attack from the state
+        setAttacks(prevAttacks => prevAttacks.filter(attack => attack.id !== id));
+        // Remove from editedAttacks state
+        setEditedAttacks(prev => {
+          const newState = { ...prev };
+          delete newState[id];
+          return newState;
+        });
+        setError('');
+      } else {
+        setError(data.error || 'Failed to delete record');
+      }
+    } catch (err) {
+      console.error('Delete error details:', err);
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setError('Request timed out. Please check your connection and try again.');
+        } else {
+          setError(`Network error: ${err.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred while deleting');
+      }
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
@@ -185,16 +251,29 @@ const ReportPage: React.FC = () => {
                   className="cause-input"
                 />
               </td>
-              <td>
+              <td className="action-buttons">
                 <button
                   className={`save-button ${hasChanges(attack) ? 'has-changes' : ''}`}
                   onClick={() => handleSave(attack.id)}
                   disabled={!hasChanges(attack) || saving}
+                  title="Save changes"
                 >
                   {saving ? (
                     <span className="material-icons spinning">sync</span>
                   ) : (
                     <span className="material-icons">save</span>
+                  )}
+                </button>
+                <button
+                  className="delete-button"
+                  onClick={() => handleDelete(attack.id)}
+                  disabled={deleting === attack.id}
+                  title="Delete record"
+                >
+                  {deleting === attack.id ? (
+                    <span className="material-icons spinning">sync</span>
+                  ) : (
+                    <span className="material-icons">delete</span>
                   )}
                 </button>
               </td>

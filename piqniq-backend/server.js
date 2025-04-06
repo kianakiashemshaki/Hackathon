@@ -8,10 +8,10 @@ const db = require('./db');
 const app = express();
 const server = http.createServer(app);
 
-// Update CORS configuration to accept connections from any origin
+// Update CORS configuration to include DELETE method
 app.use(cors({
-  origin: '*',  // Be careful with this in production
-  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+  origin: '*',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
@@ -366,6 +366,50 @@ app.patch('/api/panic-attacks/:id', authenticateToken, (req, res) => {
 
       console.log('Successfully updated panic attack');
       res.json({ message: 'Cause updated successfully' });
+    }
+  );
+});
+
+// Delete panic attack record
+app.delete('/api/panic-attacks/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+
+  console.log('Delete request received:', {
+    id,
+    userId,
+    headers: req.headers,
+    method: req.method
+  });
+
+  // Validate id
+  if (!id || isNaN(Number(id))) {
+    console.log('Invalid ID:', id);
+    return res.status(400).json({ error: 'Invalid ID' });
+  }
+
+  db.run(
+    'DELETE FROM panic_attacks WHERE id = ? AND user_id = ?',
+    [id, userId],
+    function(err) {
+      if (err) {
+        console.error('Database error during delete:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      console.log('Delete operation result:', {
+        changes: this.changes,
+        id,
+        userId
+      });
+
+      if (this.changes === 0) {
+        console.log('No record found to delete');
+        return res.status(404).json({ error: 'Panic attack not found or unauthorized' });
+      }
+
+      console.log('Successfully deleted panic attack:', id);
+      res.json({ message: 'Panic attack deleted successfully' });
     }
   );
 });
