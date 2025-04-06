@@ -251,47 +251,105 @@ io.on('connection', (socket) => {
     const coordinates = data.coordinates || null;
 
     // Record the panic attack
-    db.run('INSERT INTO panic_attacks (user_id) VALUES (?)', [userId], (err) => {
-      if (err) {
-        console.error('Error recording panic attack:', err);
-        return;
-      }
-
-      // Get user's emergency contacts
-      db.all(`
-        SELECT u.id, u.name, u.email 
-        FROM users u
-        JOIN emergency_contacts ec ON u.id = ec.contact_id
-        WHERE ec.user_id = ?
-      `, [userId], (err, contacts) => {
+    db.run(
+      'INSERT INTO panic_attacks (user_id, cause) VALUES (?, ?)',
+      [userId, null],
+      (err) => {
         if (err) {
-          console.error('Error fetching contacts:', err);
+          console.error('Error recording panic attack:', err);
           return;
         }
 
-        // Send notification to each contact
-        contacts.forEach(contact => {
-          // Find the socket for this contact
-          const contactSocket = Array.from(io.sockets.sockets.values())
-            .find(s => s.user && s.user.userId === contact.id);
-
-          if (contactSocket) {
-            const notificationData = {
-              type: 'panic_attack',
-              message: `${userName} is under attack!\nGo to the rescue at ${location}`,
-              timestamp: new Date().toISOString(),
-              userId: userId,
-              location: location,
-              coordinates: coordinates,
-              emergencyContact: EMERGENCY_CONTACT
-            };
-            console.log('Sending notification:', notificationData);
-            contactSocket.emit('notification', notificationData);
+        // Get user's emergency contacts
+        db.all(`
+          SELECT u.id, u.name, u.email 
+          FROM users u
+          JOIN emergency_contacts ec ON u.id = ec.contact_id
+          WHERE ec.user_id = ?
+        `, [userId], (err, contacts) => {
+          if (err) {
+            console.error('Error fetching contacts:', err);
+            return;
           }
+
+          // Send notification to each contact
+          contacts.forEach(contact => {
+            // Find the socket for this contact
+            const contactSocket = Array.from(io.sockets.sockets.values())
+              .find(s => s.user && s.user.userId === contact.id);
+
+            if (contactSocket) {
+              const notificationData = {
+                type: 'panic_attack',
+                message: `${userName} is under attack!\nGo to the rescue at ${location}`,
+                timestamp: new Date().toISOString(),
+                userId: userId,
+                location: location,
+                coordinates: coordinates,
+                emergencyContact: EMERGENCY_CONTACT
+              };
+              console.log('Sending notification:', notificationData);
+              contactSocket.emit('notification', notificationData);
+            }
+          });
         });
-      });
-    });
+      }
+    );
   });
+});
+
+// When recording a panic attack, include the cause field
+app.post('/api/panic-attacks', authenticateToken, (req, res) => {
+  const userId = req.user.userId;
+  const { cause } = req.body;
+
+  db.run(
+    'INSERT INTO panic_attacks (user_id, cause) VALUES (?, ?)',
+    [userId, cause || null],
+    function(err) {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(201).json({ id: this.lastID });
+    }
+  );
+});
+
+// Get panic attacks for a user
+app.get('/api/panic-attacks', authenticateToken, (req, res) => {
+  const userId = req.user.userId;
+  
+  db.all(
+    'SELECT id, timestamp, cause FROM panic_attacks WHERE user_id = ? ORDER BY timestamp DESC',
+    [userId],
+    (err, rows) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json(rows);
+    }
+  );
+});
+
+// Update panic attack cause
+app.patch('/api/panic-attacks/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { cause } = req.body;
+  const userId = req.user.userId;
+
+  db.run(
+    'UPDATE panic_attacks SET cause = ? WHERE id = ? AND user_id = ?',
+    [cause, id, userId],
+    (err) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json({ message: 'Cause updated successfully' });
+    }
+  );
 });
 
 // Start server

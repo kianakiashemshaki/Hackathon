@@ -37,8 +37,30 @@ function createTables() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      cause TEXT,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
+
+    // Add cause column to panic_attacks table if it doesn't exist
+    db.all("PRAGMA table_info(panic_attacks)", (err, rows) => {
+      if (err) {
+        console.error('Error checking table schema:', err);
+        return;
+      }
+      
+      // Check if cause column exists
+      const hasCauseColumn = Array.isArray(rows) && rows.some(row => row.name === 'cause');
+      
+      if (!hasCauseColumn) {
+        db.run(`ALTER TABLE panic_attacks ADD COLUMN cause TEXT`, (err) => {
+          if (err) {
+            console.error('Error adding cause column:', err);
+          } else {
+            console.log('Successfully added cause column to panic_attacks table');
+          }
+        });
+      }
+    });
   });
 }
 

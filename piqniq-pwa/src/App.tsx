@@ -6,6 +6,8 @@ import SignUp from './components/auth/SignUp';
 import SettingsModal from './components/SettingsModal';
 import NotificationPopup from './components/NotificationPopup';
 import BreathingCircles from './components/BreathingCircles';
+import ReportPage from './components/ReportPage';
+import MainPage from './components/MainPage';
 import './App.css';
 
 interface Notification {
@@ -182,65 +184,22 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route
-          path="/breathing"
-          element={
-            <BreathingCircles phone={new URLSearchParams(window.location.search).get('phone') || EMERGENCY_CONTACT.phone} />
-          }
-        />
+        <Route path="/breathing" element={<BreathingCircles phone={new URLSearchParams(window.location.search).get('phone') || EMERGENCY_CONTACT.phone} />} />
+        <Route path="/report" element={<PrivateRoute><ReportPage /></PrivateRoute>} />
         <Route
           path="/"
           element={
             <PrivateRoute>
-              <div className="App">
-                <div className="background-container">
-                  <img 
-                    src="/rsc/baby_bot2.png" 
-                    alt="Baby Bot" 
-                    className="baby-bot-image"
-                  />
-                </div>
-                <div className="navbar">
-                  <div className="user-greeting">
-                    <div className="greeting-text">We are here for you</div>
-                    <div className="user-name">{userName}</div>
-                  </div>
-                </div>
-                <button 
-                  className="settings-button"
-                  onClick={() => setIsSettingsOpen(true)}
-                >
-                  ⚙️
-                </button>
-                <div className="button-container">
-                  <button 
-                    className="action-button"
-                    onClick={handleButtonClick}
-                  >
-                    Panic Attack
-                  </button>
-                  {showEmergencyCall && (
-                    <button 
-                      className="main-menu-call-button"
-                      onClick={handleEmergencyCall}
-                    >
-                      <span className="material-icons">call</span>
-                    </button>
-                  )}
-                </div>
-                <SettingsModal 
-                  isOpen={isSettingsOpen}
-                  onClose={() => setIsSettingsOpen(false)}
-                />
-                {activePopup && (
-                  <NotificationPopup
-                    message={activePopup.message}
-                    onClose={handleClosePopup}
-                    coordinates={activePopup.coordinates}
-                    emergencyContact={activePopup.emergencyContact}
-                  />
-                )}
-              </div>
+              <MainPage
+                userName={userName}
+                isSettingsOpen={isSettingsOpen}
+                setIsSettingsOpen={setIsSettingsOpen}
+                handleButtonClick={handleButtonClick}
+                showEmergencyCall={showEmergencyCall}
+                handleEmergencyCall={handleEmergencyCall}
+                activePopup={activePopup}
+                handleClosePopup={handleClosePopup}
+              />
             </PrivateRoute>
           }
         />
