@@ -3,11 +3,12 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #282c34;
+  background-color: #97d9d2;
+  padding: 1rem;
 }
 
 .auth-box {
-  background-color: white;
+  background-color: #edf6f9;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -16,7 +17,7 @@
 }
 
 .auth-box h2 {
-  color: #282c34;
+  color: #333;
   text-align: center;
   margin-bottom: 1.5rem;
 }
@@ -28,7 +29,7 @@
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #282c34;
+  color: #333;
 }
 
 .form-group input {
@@ -48,11 +49,18 @@
   border-radius: 4px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
 }
 
 .auth-button:hover {
-  background-color: #ff6666;
+  background-color: #ff5555;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.auth-button:active {
+  transform: translateY(0);
 }
 
 .error-message {
@@ -62,9 +70,9 @@
 }
 
 .auth-link {
-  text-align: center;
   margin-top: 1rem;
-  color: #282c34;
+  text-align: center;
+  color: #333;
 }
 
 .auth-link a {
