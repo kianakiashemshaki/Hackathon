@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ReportPage.css';
 
-const API_URL = 'http://localhost:3001';
+// Get the current hostname and port
+const API_URL = `http://${window.location.hostname}:3001`;
 
 interface PanicAttack {
   id: number;
@@ -25,26 +26,47 @@ const ReportPage: React.FC = () => {
   const fetchAttacks = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Not authenticated');
+        return;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const response = await fetch(`${API_URL}/api/panic-attacks`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
         setAttacks(data);
-        // Initialize editedAttacks with current causes
         const initialEdits = data.reduce((acc: { [key: number]: string }, attack: PanicAttack) => {
           acc[attack.id] = attack.cause || '';
           return acc;
         }, {});
         setEditedAttacks(initialEdits);
+        setError('');
       } else {
-        setError('Failed to fetch panic attack history');
+        const data = await response.json();
+        setError(data.error || 'Failed to fetch panic attack history');
       }
     } catch (err) {
-      setError('Error loading data');
+      console.error('Error fetching attacks:', err);
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setError('Request timed out. Please check your connection and try again.');
+        } else {
+          setError(`Network error: ${err.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred while loading data');
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +90,10 @@ const ReportPage: React.FC = () => {
 
       const url = `${API_URL}/api/panic-attacks/${id}`;
       console.log('Making request to:', url);
-      console.log('Request payload:', { cause: editedAttacks[id] });
+
+      // Add timeout to the fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
       const response = await fetch(url, {
         method: 'PATCH',
@@ -77,13 +102,13 @@ const ReportPage: React.FC = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ cause: editedAttacks[id] })
+        body: JSON.stringify({ cause: editedAttacks[id] }),
+        signal: controller.signal
       });
 
-      console.log('Response status:', response.status);
+      clearTimeout(timeoutId);
       
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (response.ok) {
         setAttacks(prevAttacks => 
@@ -97,9 +122,12 @@ const ReportPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Full error details:', err);
-      // Type check the error object
       if (err instanceof Error) {
-        setError(`Network error: ${err.message}`);
+        if (err.name === 'AbortError') {
+          setError('Request timed out. Please check your connection and try again.');
+        } else {
+          setError(`Network error: ${err.message}`);
+        }
       } else {
         setError('An unexpected error occurred');
       }

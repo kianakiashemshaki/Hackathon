@@ -8,9 +8,9 @@ const db = require('./db');
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for all routes with minimal restrictions
+// Update CORS configuration to accept connections from any origin
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: '*',  // Be careful with this in production
   methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -386,9 +386,10 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is running' });
 });
 
-// Start server
+// Update the server listen configuration
 const PORT = process.env.PORT || 3001;
-const HOST = '0.0.0.0';
+const HOST = '0.0.0.0';  // Listen on all network interfaces
+
 server.listen(PORT, HOST, () => {
   console.log(`Server running on http://${HOST}:${PORT}`);
 }); 
