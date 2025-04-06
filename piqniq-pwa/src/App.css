@@ -3,13 +3,14 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #282c34;
+  background-color: #c3d499;
   margin: 0;
   padding: 0;
   position: relative;
   text-align: center;
   flex-direction: column;
   justify-content: center;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .background-container {
@@ -18,7 +19,7 @@
   bottom: 100px;  /* Space from bottom */
   left: 0;
   right: 0;
-  background-image: url('/rsc/baby_bot.png');
+  /* background-image: url('/rsc/baby_bot.png'); */
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -65,7 +66,7 @@
 }
 
 .settings-button {
-  position: absolute;
+  position: fixed;
   top: 20px;
   right: 20px;
   background: none;
@@ -76,6 +77,7 @@
   padding: 10px;
   border-radius: 50%;
   transition: background-color 0.3s;
+  z-index: 2;
 }
 
 .settings-button:hover {
@@ -86,18 +88,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  margin-top: 10rem;
+  gap: 2rem;
+  margin-top: 4rem;
+  width: 100%;
+  padding: 0 1rem;
 }
 
 .action-button {
-  width: 200px;
-  height: 200px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   background-color: #ff4444;
   color: white;
   border: none;
-  font-size: 1.5rem;
+  font-size: 3rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -110,8 +114,8 @@
 }
 
 .main-menu-call-button {
-  width: 120px;
-  height: 120px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
   background-color: #4CAF50;
   color: white;
@@ -131,7 +135,7 @@
 }
 
 .main-menu-call-button .material-icons {
-  font-size: 2.5rem;
+  font-size: 5rem;
 }
 
 @keyframes fadeIn {
@@ -177,37 +181,95 @@
 
 /* Mobile responsiveness */
 @media (max-width: 600px) {
+  .navbar {
+    padding: 1rem;
+  }
+
+  .user-greeting {
+    font-size: 1.2rem;
+    padding: 0;
+    max-width: 90%;
+    transform: translateX(-15px); /* Slightly less shift on mobile */
+  }
+
+  .button-container {
+    margin-top: 6rem; /* Increased top margin for better spacing */
+    padding: 0;
+  }
+
   .action-button {
-    width: 150px;
-    height: 150px;
-    font-size: 20px;
+    width: 300px;
+    height: 300px;
+    font-size: 2rem;
+    margin: 0 auto; /* Center horizontally */
   }
   
+  .main-menu-call-button {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto; /* Center horizontally */
+  }
+  
+  .main-menu-call-button .material-icons {
+    font-size: 3.5rem;
+  }
+
   .settings-button {
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 320px) {
+  .action-button {
+    width: 250px;
+    height: 250px;
+    font-size: 1.8rem;
   }
 
-  .notifications-container {
-    top: 10px;
-    left: 10px;
+  .main-menu-call-button {
+    width: 150px;
+    height: 150px;
   }
 
-  .notification {
-    max-width: calc(100vw - 40px);
+  .user-greeting {
+    font-size: 1.1rem;
   }
 }
 
 .user-greeting {
-  position: absolute;
-  top: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   font-size: 1.5rem;
-  color: #333;
+  color: white;
   font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+  max-width: 80%;
+  margin: 0 auto;
+  transform: translateX(-20px); /* Move text slightly to the left */
+}
+
+.greeting-text, .user-name {
+  margin: 0;
   text-align: center;
   width: 100%;
-  padding: 0 1rem;
+  white-space: normal;
+}
+
+.navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #97d9d2;
+  padding: 1.5rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
