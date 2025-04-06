@@ -5,6 +5,7 @@ import SignIn from './components/auth/SignIn';
 import SignUp from './components/auth/SignUp';
 import SettingsModal from './components/SettingsModal';
 import NotificationPopup from './components/NotificationPopup';
+import BreathingCircles from './components/BreathingCircles';
 import './App.css';
 
 interface Notification {
@@ -22,6 +23,11 @@ interface Notification {
 
 // Get the current hostname and port
 const API_URL = `http://${window.location.hostname}:3001`;
+
+const EMERGENCY_CONTACT = {
+  email: '911',
+  phone: '911'
+};
 
 const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -144,7 +150,8 @@ const App: React.FC = () => {
           location: address,
           coordinates
         });
-        setShowEmergencyCall(true);
+        // Instead of setShowEmergencyCall, navigate to the breathing page
+        window.open(`/breathing?phone=${encodeURIComponent(EMERGENCY_CONTACT.phone)}`, '_blank');
       } catch (error) {
         console.error('Error getting location:', error);
         socket.emit('button_click', { 
@@ -152,15 +159,12 @@ const App: React.FC = () => {
           location: 'Location unavailable',
           coordinates: null
         });
-        setShowEmergencyCall(true);
+        window.open(`/breathing?phone=${encodeURIComponent(EMERGENCY_CONTACT.phone)}`, '_blank');
       }
     }
   };
 
   const handleEmergencyCall = () => {
-    const meetUrl = `https://meet.google.com/new?authuser=letmemakenewone@gmail.com`;
-    window.open(meetUrl, '_blank');
-    
     const phoneUrl = 'tel:+1 (619) 609 3341';
     window.open(phoneUrl, '_blank');
   };
@@ -178,6 +182,12 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route
+          path="/breathing"
+          element={
+            <BreathingCircles phone={new URLSearchParams(window.location.search).get('phone') || EMERGENCY_CONTACT.phone} />
+          }
+        />
         <Route
           path="/"
           element={

@@ -14,11 +14,7 @@ const EmergencyCallButton: React.FC<EmergencyCallButtonProps> = ({ phone, email 
     setIsCalling(true);
     setCallStatus('Initiating call...');
 
-    // Try Google Meet first
-    const meetUrl = `https://meet.google.com/new?authuser=${email}`;
-    window.open(meetUrl, '_blank');
-
-    // Then try phone call
+    // Use system phone carrier
     const phoneUrl = `tel:${phone}`;
     window.open(phoneUrl, '_blank');
 

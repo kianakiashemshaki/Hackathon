@@ -15,8 +15,8 @@ interface Contact {
 }
 
 const EMERGENCY_CONTACT = {
-  email: 'letmemakenewone@gmail.com',
-  phone: '+1 (619) 609 3341'
+  email: '911',
+  phone: '911'
 };
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {

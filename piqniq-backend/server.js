@@ -122,11 +122,11 @@ app.post('/api/auth/signin', async (req, res) => {
 
 // Add emergency contact
 app.post('/api/contacts', authenticateToken, async (req, res) => {
-  const { name, email } = req.body;
+  const { name, email = '' } = req.body;
   const userId = req.user.userId;
 
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
+  if (!name) {
+    return res.status(400).json({ error: 'Name is required' });
   }
 
   try {
@@ -135,8 +135,8 @@ app.post('/api/contacts', authenticateToken, async (req, res) => {
     // Check if contact already exists
     const existingContact = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM emergency_contacts WHERE user_id = ? AND email = ?',
-        [userId, email],
+        'SELECT * FROM emergency_contacts WHERE user_id = ? AND name = ?',
+        [userId, name],
         (err, row) => {
           if (err) reject(err);
           else resolve(row);
@@ -145,7 +145,7 @@ app.post('/api/contacts', authenticateToken, async (req, res) => {
     });
 
     if (existingContact) {
-      return res.status(400).json({ error: 'Contact already exists' });
+      return res.status(400).json({ error: 'A contact with this name already exists' });
     }
 
     // Add new contact
