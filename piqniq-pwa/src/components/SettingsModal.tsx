@@ -96,12 +96,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         <button className="close-button" onClick={onClose}>×</button>
         <h2>Emergency Contacts</h2>
         
-        <div className="emergency-contact-info">
-          <h3>Emergency Contact</h3>
-          <p>Email: {EMERGENCY_CONTACT.email}</p>
-          <p>Phone: {EMERGENCY_CONTACT.phone}</p>
-        </div>
-
         <form onSubmit={handleAddContact}>
           <div className="form-group">
             <label htmlFor="contactName">Add New Contact</label>
@@ -113,9 +107,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               placeholder="Enter contact's name"
               required
               disabled={isLoading}
+              style={{width: '100%'}}
             />
           </div>
-          <button type="submit" className="add-button" disabled={isLoading}>
+          <button 
+            type="submit" 
+            className="add-button" 
+            disabled={isLoading}
+            style={{width: '100%'}}
+          >
             {isLoading ? 'Adding...' : 'Add Contact'}
           </button>
         </form>
@@ -131,7 +131,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <ul>
               {contacts.map(contact => (
                 <li key={contact.id} className="contact-item">
-                  <span className="contact-name">{contact.name}</span>
+                  <span className="contact-name" style={{color: 'green', display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                    <span>{contact.name}</span>
+                    <span>{contact.email}</span>
+                  </span>
                 </li>
               ))}
             </ul>

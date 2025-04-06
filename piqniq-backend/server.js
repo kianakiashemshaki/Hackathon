@@ -132,10 +132,10 @@ app.post('/api/contacts', authenticateToken, async (req, res) => {
   try {
     console.log('Attempting to add contact:', { name, email, userId });
     
-    // Check if contact already exists
+    // Check if contact already exists for this user
     const existingContact = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM emergency_contacts WHERE user_id = ? AND name = ?',
+        'SELECT * FROM emergency_contacts WHERE user_id = ? AND contact_id IN (SELECT id FROM users WHERE name = ?)',
         [userId, name],
         (err, row) => {
           if (err) reject(err);
@@ -148,11 +148,27 @@ app.post('/api/contacts', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'A contact with this name already exists' });
     }
 
-    // Add new contact
+    // Get contact ID from users table
+    const contact = await new Promise((resolve, reject) => {
+      db.get(
+        'SELECT id FROM users WHERE name = ?',
+        [name],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (!contact) {
+      return res.status(404).json({ error: 'Contact not found' });
+    }
+
+    // Add emergency contact relationship
     await new Promise((resolve, reject) => {
       db.run(
-        'INSERT INTO emergency_contacts (user_id, name, email) VALUES (?, ?, ?)',
-        [userId, name, email],
+        'INSERT INTO emergency_contacts (user_id, contact_id, created_at) VALUES (?, ?, datetime("now"))',
+        [userId, contact.id],
         (err) => {
           if (err) {
             console.error('Database error adding contact:', err);
