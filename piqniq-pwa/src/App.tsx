@@ -193,7 +193,13 @@ const App: React.FC = () => {
           element={
             <PrivateRoute>
               <div className="App">
-                <div className="background-container"></div>
+                <div className="background-container">
+                  <img 
+                    src="/rsc/baby_bot2.png" 
+                    alt="Baby Bot" 
+                    className="baby-bot-image"
+                  />
+                </div>
                 <div className="navbar">
                   <div className="user-greeting">
                     <div className="greeting-text">We are here for you</div>
