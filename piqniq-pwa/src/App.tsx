@@ -193,6 +193,7 @@ const App: React.FC = () => {
           element={
             <PrivateRoute>
               <div className="App">
+                <div className="background-container"></div>
                 <div className="user-greeting">
                   We are here for you {userName}
                 </div>
