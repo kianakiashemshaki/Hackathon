@@ -1,4 +1,4 @@
-# PiqNiq - Your Calm in Crisis
+# 🧠 PiqNiq - Your Calm in Crisis
 
 ## 🥈2nd Place Winner – BGSU Hackathon 2025
 ![App Banner](app.png)
